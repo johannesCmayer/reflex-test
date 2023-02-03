@@ -1,0 +1,63 @@
+#!/usr/bin/env python3
+
+import time
+import random
+from datetime import datetime
+import json
+import os
+import argparse
+from glob import glob
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--debug', action='store_true')
+parser.add_argument('--analyze', action='store_true')
+args = parser.parse_args()
+
+project_dir = os.path.dirname(os.path.realpath(__file__))
+data_dir = f"{project_dir}/data"
+
+def gather_data():
+    if args.debug:
+        print(f'DEBUG: {args.debug}')
+
+    REPEATS = 10 if not args.debug else 1
+    MAX_WAIT = 10 if not args.debug else 0
+    MSG = "GOGOGO (hit enter)"
+
+
+    print(f"Your task is to hit enter as quickly as possible once you see the text '{MSG}' is printed. This test will be repeated {REPEATS} times. Make sure that you rest your finger directly on the enter Key.")
+    name = input("Enter your name: ")
+    input("Hit enter to start.")
+
+    times = []
+    for i in range(REPEATS):
+        time.sleep((1 if not args.debug else 0) + random.random() * MAX_WAIT)
+        start_time = time.time()
+        input(MSG)
+        times.append(time.time() - start_time)
+
+    print("Average Time: ", sum(times)/len(times))
+    print("Times:")
+    for e in times:
+        print(e)
+
+    data_safe = datetime.now().isoformat()
+    with open(f'{data_dir}/{data_safe}_{name}.json', 'w') as f:
+        json.dump(times, f)
+
+def analyze():
+    for f_path in sorted(glob(f'{data_dir}/*.json')):
+        with open(f_path) as f:
+            data = json.load(f)
+            print(os.path.basename(f_path))
+            print(f"Average: {sum(data)/len(data)}")
+            print(f"Minimum: {min(data)}")
+            print(f"Maximum: {max(data)}")
+            print(f"Number of presses: {len(data)}")
+            print()
+
+if __name__ == "__main__":
+    if args.analyze:
+        analyze()
+    else:
+        gather_data()
